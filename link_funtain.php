@@ -3,7 +3,7 @@ Class link_funtain
 {
     public function create_user_ws($ip,$mac)
     {
-        $user_created = getExistUser($mac);
+        $user_created = $this->getExistUser($mac);
         if($user_created>0)
         {
             return $user_created;            
@@ -12,7 +12,7 @@ Class link_funtain
         {
             $query_insert_user="INSERT INTO user_funtain (mac_adr, ip_adr, single, online) VALUES('$mac','$ip',0,0);";
             $user_created = $this->setConnection($query_insert_user);  
-            return getExistUser($mac);          
+            return $this->getExistUser($mac);          
         }
     }
 
@@ -37,7 +37,7 @@ Class link_funtain
         $message = "";
         if ($single == 1)
         {
-            $connected_single =get_single_connected_fn();
+            $connected_single =$this->get_single_connected_fn();
             if($connected_single==0)
             {
                 $success=false;
@@ -52,7 +52,7 @@ Class link_funtain
         }
         else
         {
-            $connected_multi = get_multi_connected_fn();
+            $connected_multi = $this->get_multi_connected_fn();
             if ($connected_multi == 0)
             {
                 $success=false;
@@ -76,7 +76,7 @@ Class link_funtain
             $success=false;
             $message="Connection Error.";
         }
-        return setJsonResponse($sucess,$message);
+        return $this->setJsonResponse($sucess,$message);
     }
 
     private function get_single_connected_fn()
@@ -141,23 +141,23 @@ Class link_funtain
     private function getOnline($user)
     {
         $query = "select online, single from user_funtain where user_id = '$user';";
-        $online = setConnection($query);
+        $online = $this->setConnection($query);
         $result=mysqli_fetch_array($online,MYSQLI_NUM);
         $rows = array();
 		while($r = mysqli_fetch_assoc($result))
 		{
     			$rows[] = $r;
 		}
-		$response= json_encode($rows);
+		$response= $this->json_encode($rows);
 		return $response;
     }
 
     public function insert_single_ws($user_id, $value)
     {
-        $online = get_connected_by_id($user_id);
+        $online = $this->get_connected_by_id($user_id);
         if($online ==1)//user connected
         {
-            $message = insertShakeValue($user_id,$value,1);
+            $message = $this->insertShakeValue($user_id,$value,1);
             $success=true;
             //$message = "Inserted Value!";
         }
@@ -166,15 +166,15 @@ Class link_funtain
             $success=false;
             $message="User not Online";
         }
-        return setJsonResponse($sucess,$message);
+        return $this->setJsonResponse($sucess,$message);
     }
 
     public function insert_multi_ws($user_id, $value)
     {
-        $online = get_connected_by_id($user_id);
+        $online = $this->get_connected_by_id($user_id);
         if($online ==1)//user connected
         {
-            $message=insertShakeValue($user_id,$value,0);
+            $message=$this->insertShakeValue($user_id,$value,0);
             $success=true;
             //$message = "Inserted Value!";
         }
@@ -183,7 +183,7 @@ Class link_funtain
             $success=false;
             $message="User not Online";
         }
-        return setJsonResponse($sucess,$message);
+        return $this->setJsonResponse($sucess,$message);
     }
 
     private function insertShakeValue($user,$value,$single)
@@ -196,7 +196,7 @@ Class link_funtain
         {
             $query_shake = "INSERT INTO group_shake (user_id, shake_val) VALUES($user,$value);";
         }
-        return setConnection($query_shake);
+        return $this->setConnection($query_shake);
     }
 
     private function setConnection($con_query)
