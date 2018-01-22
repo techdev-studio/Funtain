@@ -35,6 +35,7 @@ Class link_funtain
     {
         $success = false;
         $message = "";
+        $online = 0;
         if ($single == 1)
         {
             $connected_single =$this->get_single_connected_fn();
@@ -69,14 +70,14 @@ Class link_funtain
         if($online ==1)//
         {
             $success=true;
-            $message = "Connected!";
+            $message = "User Connected!";
         }
         else
         {
             $success=false;
-            $message="Connection Error.";
+            $message="User not connected";
         }
-        return $this->setJsonResponse($sucess,$message);
+        return $this->setJsonResponse($success,$message);
     }
 
     private function get_single_connected_fn()
