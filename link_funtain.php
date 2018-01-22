@@ -39,22 +39,22 @@ Class link_funtain
         if ($single == 1)
         {
             $connected_single =$this->get_single_connected_fn();
-            if($connected_single==0)
+            if($connected_single>0)
             {
                 $success=false;
-                $message="Single Player Already Online";
+                $message="Single Player Already Online '$connected_single'";
             }
             else
             {
                 $query_online_single = "UPDATE user_funtain SET online =1, single=1 where user_id = '$user_id';";
                 $new_online = $this->setConnection($query_online_single);
-                $online = get_connected_by_id($user_id);       
+                $online = $this->get_connected_by_id($user_id);       
             }
         }
         else
         {
             $connected_multi = $this->get_multi_connected_fn();
-            if ($connected_multi == 0)
+            if ($connected_multi == 1)
             {
                 $success=false;
                 $message="Multiplayer FULL";
@@ -63,7 +63,7 @@ Class link_funtain
             {
                 $query_online_multi = "UPDATE user_funtain SET online =1, single=0 where user_id = '$user_id';";
                 $new_online = $this->setConnection($query_online_multi);
-                $online = get_connected_by_id($user_id);           
+                $online = $this->get_connected_by_id($user_id);           
             }
         }
 
@@ -75,7 +75,7 @@ Class link_funtain
         else
         {
             $success=false;
-            $message="User not connected";
+            //$message="User not connected";
         }
         return $this->setJsonResponse($success,$message);
     }
@@ -85,16 +85,17 @@ Class link_funtain
         $online = 0;
         $query_get_connected_single = "select user_id from user_funtain where online = 1 and single = 1;";
         $single_online = $this->setConnection($query_get_connected_single);
-        $r1=mysqli_fetch_array($single_online,MYSQLI_NUM);
-        if (sizeof($r1) > 0)
+        //$r1=mysqli_fetch_array($single_online,MYSQLI_NUM);
+        if (!is_null($single_online))
         {
             //hay un single conectado
-            return 0;
+            $r1 = mysqli_fetch_array($single_online,MYSQLI_NUM);
+	    return $r1[0];
         }
         else
         {
             //no hay single conectado
-            return 1;
+            return 0;
         }
     }
 
@@ -103,16 +104,16 @@ Class link_funtain
         //validar maximo 5 conectados
         $query_get_connected_multi = "select user_id from user_funtain where online = 1 and single = 0;";
         $multi_online = $this->setConnection($query_get_connected_multi);
-        $r1=mysqli_fetch_array($single_online,MYSQLI_NUM);
+        $r1=mysqli_fetch_array($multi_online,MYSQLI_NUM);
         if(sizeof($r1)<5)
         {
             //multi todavia hay espacio
-            return 1;
+            return 0;
         }
         else
         {
             //multi completado
-            return 0;
+            return 1;
         }
     }
 
@@ -167,7 +168,7 @@ Class link_funtain
             $success=false;
             $message="User not Online";
         }
-        return $this->setJsonResponse($sucess,$message);
+        return $this->setJsonResponse($success,$message);
     }
 
     public function insert_multi_ws($user_id, $value)
@@ -184,7 +185,7 @@ Class link_funtain
             $success=false;
             $message="User not Online";
         }
-        return $this->setJsonResponse($sucess,$message);
+        return $this->setJsonResponse($success,$message);
     }
 
     private function insertShakeValue($user,$value,$single)
@@ -213,6 +214,7 @@ Class link_funtain
 
     private function setJsonResponse($success, $message)
     {
+	$myObj = new \stdClass();
         $myObj->success = $success;
         $myObj->message = $message;
         
