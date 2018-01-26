@@ -6,10 +6,10 @@ GPIO.setmode(GPIO.BCM)  # Ponemos la Raspberry en modo BCM
 
 GPIO.setup(18, GPIO.OUT)  # Ponemos el pin GPIO como salida
 
-valve=GPIO.PWM(18, 100)
+valve=GPIO.PWM(18, 50)
 
 valve.start(0)
-pause_time = 0.5           # Declaramos un lapso de tiempo para las pausas
+pause_time = 0.2           # Declaramos un lapso de tiempo para las pausas
 
 max_value = 1000
 
@@ -22,18 +22,27 @@ try:                        # Abrimos un bloque 'Try...except KeyboardInterrupt'
 
 	#execute an sql query
 	cur.execute("SELECT *  FROM single_shake where shaked = 0 order by sshake_id asc;")
-
-	##Iterate 
-	for row in cur.fetchall() :
-      		#data from rows
-        	sshake_id = row[0] 
-        	shake_val = row[2]
-        	cur.execute("update single_shake set shaked=1 where sshake_id = " + str(sshake_id))
+	#cur.execute("select * from single_shake order by sshake_id asc;")
+	if cur.rowcount==0:
+		#print 0
+		valve.ChangeDutyCycle(100)
+		sleep(pause_time)
+		cur.execute("delete from single_shake where shaked = 1;")
 		db.commit()
-      		#print 
-        	print shake_val            
-        	valve.ChangeDutyCycle(100*(max_value-shake_val)/max_value)
-        	sleep(pause_time)
+	else:
+		##Iterate 
+		for row in cur.fetchall() :
+      			#data from rows
+        		sshake_id = row[0] 
+        		shake_val = row[2]/2
+        		cur.execute("update single_shake set shaked=1 where sshake_id = " + str(sshake_id))
+			db.commit()
+      			#print 
+        		print shake_val
+			if shake_val > 100:
+				shake_val = 100            
+        		valve.ChangeDutyCycle(100-shake_val)
+        		sleep(pause_time)
 
 	# close the cursor
 	cur.close()
