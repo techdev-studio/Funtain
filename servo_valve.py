@@ -11,7 +11,7 @@ valve=GPIO.PWM(18, 50)
 valve.start(0)
 pause_time = 0.2           # Declaramos un lapso de tiempo para las pausas
 
-max_value = 1000
+max_value = 100
 
 try:                        # Abrimos un bloque 'Try...except KeyboardInterrupt'
     while True:             # Iniciamos un bucle 'while true'
