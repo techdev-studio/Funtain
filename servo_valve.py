@@ -3,52 +3,96 @@ from time import sleep  # cargamo
 import MySQLdb
 
 GPIO.setmode(GPIO.BCM)  # Ponemos la Raspberry en modo BCM
-
 GPIO.setup(18, GPIO.OUT)  # Ponemos el pin GPIO como salida
 
-valve=GPIO.PWM(18, 50)
+#variables
+pause_time = 0.05           # Declaramos un lapso de tiempo para las pausas en segundos
+min_value = 15				#min porcentaje de apertura de valvula
+max_value = 100				#max porcentaje de apertura de valvula
 
-valve.start(0)
-pause_time = 0.2           # Declaramos un lapso de tiempo para las pausas
-
-max_value = 1000
+#PWM setup
+valve=GPIO.PWM(18, 250) 	#configuramos la senal pwm a la frecuencia deseada
+valve.start(min_value) 		#iniciamos valvula con apertura minima 
 
 try:                        # Abrimos un bloque 'Try...except KeyboardInterrupt'
     while True:             # Iniciamos un bucle 'while true'
+		shake_val = 0
+		user_id = 0 
+
+		#connect to DB
         db = MySQLdb.connect(host="localhost", user="root", passwd="funtain@tds", db="funtain_db")
 
-	#create a cursor for the select
-	cur = db.cursor()
+		#create a cursor for the select
+		cur = db.cursor()
 
-	#execute an sql query
-	cur.execute("SELECT *  FROM single_shake where shaked = 0 order by sshake_id asc;")
-	#cur.execute("select * from single_shake order by sshake_id asc;")
-	if cur.rowcount==0:
-		#print 0
-		valve.ChangeDutyCycle(100)
-		sleep(pause_time)
-		cur.execute("delete from single_shake where shaked = 1;")
-		db.commit()
-	else:
-		##Iterate 
-		for row in cur.fetchall() :
-      			#data from rows
-        		sshake_id = row[0] 
-        		shake_val = row[2]/2
-        		cur.execute("update single_shake set shaked=1 where sshake_id = " + str(sshake_id))
-			db.commit()
-      			#print 
-        		print shake_val
-			if shake_val > 100:
-				shake_val = 100            
-        		valve.ChangeDutyCycle(100-shake_val)
-        		sleep(pause_time)
+		#execute single user shake
+		cur.execute("SELECT *  FROM user_funtain where single = 1 and online = 1 order by user_id desc;")
 
-	# close the cursor
-	cur.close()
+		if cur.rowcount==0:
+			#execute group shake
+			cur.execute("SELECT *  FROM user_funtain where single = 0 and online = 1;")
+			q_user = cur.rowcount
 
-	# close the connection
-	db.close ()
+			if q_user > 0:
+				#multi connected
+				users = [0] * q_user
+				index = 0
+				
+				for urow in cur.fetchall():
+					#data from users
+					users[index] = urow[0]
+					index = index + 1
+				
+				for u_id in users:
+					cur.execute("SELECT *  FROM group_shake where shaked = 0 and user_id = " + str(u_id) + " order by gshake_id desc;")
+					row_val = cur.fetchone()
+					gshake_id = row_val[0]
+					gshake_val = row_val[2]/q_user
+					shake_val = shake_val + gshake_val
+					#update values
+					cur.execute("update group_shake set shaked=1 where user_id=" + str(u_id) + " and gshake_id <= " + str(gshake_id) )
+					db.commit()
+					
+
+			else:
+				#print 0
+				valve.ChangeDutyCycle(min_value)
+				sleep(pause_time)
+				cur.execute("delete from single_shake where shaked = 1;")
+				db.commit()
+				cur.execute("delete from multi_shake where shaked = 1;")
+				db.commit()
+			
+		else:
+			row = cur.fetchone()
+			user_id = row[0]
+			print user_id
+
+			#execute single shake
+			cur.execute("SELECT *  FROM single_shake where shaked = 0 and user_id = " + str(user_id) + " order by sshake_id asc;")
+			#Iterate 
+			for row in cur.fetchall():
+				#data from rows
+				sshake_id = row[0] 
+				shake_val = row[2]
+				cur.execute("update single_shake set shaked=1 where sshake_id = " + str(sshake_id))
+				db.commit()
+
+				#print 
+				print shake_val
+				if shake_val > max_value:
+					shake_val = max_value
+
+				if shake_val < min_value:
+					shake_val = min_value
+
+				valve.ChangeDutyCycle(shake_val)					
+				sleep(pause_time)
+
+		# close the cursor
+		cur.close()
+		# close the connection
+		db.close ()
 
 except KeyboardInterrupt:   # Se ha pulsado CTRL+C!!
     valve.stop()            # Detenemos el objeto 'valve'
