@@ -52,6 +52,10 @@ try:                        # Abrimos un bloque 'Try...except KeyboardInterrupt'
 				#update values
 				cur.execute("update group_shake set shaked=1 where user_id=" + str(u_id) + " and gshake_id <= " + str(gshake_id) )
 				db.commit()
+
+			valve.ChangeDutyCycle(shake_val)					
+			sleep(pause_time)
+			shake_val=0
 				
 		else:
 			#print 0
