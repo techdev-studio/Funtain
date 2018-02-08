@@ -9,7 +9,8 @@ GPIO.setup(18, GPIO.OUT)  # Ponemos el pin GPIO como salida
 pause_time = 0.05           # Declaramos un lapso de tiempo para las pausas en segundos
 min_value = 15				#min porcentaje de apertura de valvula
 max_value = 100				#max porcentaje de apertura de valvula
-
+not_using = 0				#turnos que no se ha enviado data, al turno definido por not_using_max se desconecta
+not_using_max = 100
 #PWM setup
 valve=GPIO.PWM(18, 250) 	#configuramos la senal pwm a la frecuencia deseada
 valve.start(min_value) 		#iniciamos valvula con apertura minima 
@@ -65,6 +66,10 @@ try:                        # Abrimos un bloque 'Try...except KeyboardInterrupt'
 			db.commit()
 			cur.execute("delete from multi_shake where shaked = 1;")
 			db.commit()
+			not_using = not_using + 1
+			if not_using > not_using_max
+				cur.execute("update user_funtain set online = 0 where online = 1;")
+				db.commit()
 			
 	else:
 		row = cur.fetchone()
