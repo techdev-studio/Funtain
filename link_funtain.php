@@ -3,8 +3,8 @@ Class link_funtain
 {
     public function create_user_ws($ip,$mac)
     {
-        $user_created = $this->getExistUser($mac);
-        if($user_created>0)
+        $user_created = $this->getExistUser($ip);
+        if($user_created!=0)
         {
             return $user_created;            
         }
@@ -12,18 +12,20 @@ Class link_funtain
         {
             $query_insert_user="INSERT INTO user_funtain (mac_adr, ip_adr, single, online) VALUES('$mac','$ip',0,0);";
             $user_created = $this->setConnection($query_insert_user);  
-            return $this->getExistUser($mac);          
+            return $this->getExistUser($ip);          
         }
     }
 
-    private function getExistUser($mac)
+    private function getExistUser($ip)
     {
-        $query_user = "Select user_id from user_funtain where mac_adr = '$mac';";
+        $query_user = "Select user_id from user_funtain where ip_adr = '$ip';";
         $exist_user = $this->setConnection($query_user);
         $r_exist_user=mysqli_fetch_array($exist_user,MYSQLI_NUM);
         if(sizeof($r_exist_user)>0)
         {
-            return $r_exist_user[0];
+	    $user=new \stdClass();
+	    $user->user_id = $r_exist_user[0];
+            return json_encode($user);
         }
         else
         {

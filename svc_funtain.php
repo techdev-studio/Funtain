@@ -72,6 +72,13 @@ else
             print $response;
         }
     }
+    else if ($Req_Met == "desconectar")
+    {
+	$user_id = $_REQUEST['user_id'];
+        $ob_link_fun = new link_funtain();
+    	$response = $ob_link_fun->setOffline($user_id);
+        print $response;
+    }
     else
     {
         die ('no existe ese metodo');
