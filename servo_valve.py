@@ -14,7 +14,18 @@ inact_counter = 0
 #PWM setup
 #valve=GPIO.PWM(18, 250) 	#configuramos la senal pwm a la frecuencia deseada
 #valve.start(min_value) 		#iniciamos valvula con apertura minima 
-ser = serial.Serial('/dev/ttyACM0',9600)
+#ser = serial.Serial('/dev/ttyACM0',9600)
+
+ser = serial.Serial(
+                      port='/dev/ttyAMA0',
+                      baudrate = 9600,
+                      parity=serial.PARITY_NONE,
+                      stopbits=serial.STOPBITS_ONE,
+                      bytesize=serial.EIGHTBITS,
+                      timeout=1
+                  )
+ser.flush()
+sleep(1)
 
 try:
 	print "reseteando tablas"
@@ -89,7 +100,7 @@ try:                        # Abrimos un bloque 'Try...except KeyboardInterrupt'
                        	if shake_val < min_value:
                        		shake_val = min_value
         		
-			ser.write('shake_val')
+			ser.write(str(shake_val))
 			ser.write("\n")	
 			#valve.ChangeDutyCycle(shake_val)
                		sleep(pause_time)
@@ -139,7 +150,7 @@ try:                        # Abrimos un bloque 'Try...except KeyboardInterrupt'
 			if shake_val < min_value:
 				shake_val = min_value
 
-			ser.write('shake_val')
+			ser.write(str(shake_val))
 			ser.write("\n")
 			#valve.ChangeDutyCycle(shake_val)					
 			sleep(pause_time)
