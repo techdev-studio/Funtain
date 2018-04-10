@@ -91,7 +91,17 @@ try:                        # Abrimos un bloque 'Try...except KeyboardInterrupt'
 					db.commit()
 				except:
 					print "nothing in group shake"
+					ser.write("0")
+                        		ser.write("\n")
 					sleep(0.5)
+					inact_counter=inact_counter+1
+					if inact_counter > 20:
+                                		inact_counter =0
+                                		cur.execute("update user_funtain set online = 0 where online=1;")
+                                		db.commit()
+                                		print "user_reset"
+						ser.flush()
+						sleep(1)
 			print shake_val
 
 			if shake_val > max_value:
@@ -104,6 +114,7 @@ try:                        # Abrimos un bloque 'Try...except KeyboardInterrupt'
 			ser.write("\n")	
 			#valve.ChangeDutyCycle(shake_val)
                		sleep(pause_time)
+			inact_counter = 0
 
 		else:
 			inact_counter = inact_counter +1
@@ -112,13 +123,15 @@ try:                        # Abrimos un bloque 'Try...except KeyboardInterrupt'
 			ser.write("0")
 			ser.write("\n")
 			sleep(2)
+			ser.flush()
+			sleep(1)
 			cur.execute("delete from single_shake where shaked = 1;")
 			db.commit()
 			print "shake_single del"
 			cur.execute("delete from group_shake where shaked = 1;")
 			db.commit()
 			print "shake_group del"
-			if inact_counter > 7:
+			if inact_counter > 8:
 				inact_counter =0
 				cur.execute("update user_funtain set online = 0 where online=1;")
         	                db.commit()
@@ -154,9 +167,20 @@ try:                        # Abrimos un bloque 'Try...except KeyboardInterrupt'
 			ser.write("\n")
 			#valve.ChangeDutyCycle(shake_val)					
 			sleep(pause_time)
+			inact_counter=0
 		except:
 			print "no val single"
-			sleep(pause_time)
+			inact_counter=inact_counter+1
+			ser.write("0")
+                        ser.write("\n")
+			sleep(0.5)
+		if inact_counter > 25:
+                                inact_counter =0
+                                cur.execute("update user_funtain set online = 0 where online=1;")
+                                db.commit()
+                                print "user_reset"
+				ser.flush()
+				sleep(1)
 
 	# close the cursor
 	cur.close()
